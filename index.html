@@ -62,15 +62,31 @@
             const strLastName = $('#txtLastName').val()
 
             let strErrorMessages = ''
+            let blnError = false
 
-            if (!strEmail) strErrorMessages += '<p>Email is required</p>'
-            else if (!strEmail.endsWith('@tntech.edu')) errorMessages += '<p>Email must be a TN Tech email</p>'
+            if (!strEmail) {
+                strErrorMessages += '<p>Email is required</p>'
+                blnError = true
+            } 
+            if (!strEmail.includes('@tntech.edu')){
+                errorMessages += '<p>Email must be a TN Tech email</p>'
+                blnError = true
+            }
 
-            if (!strPassword) strErrorMessages += '<p>Password is required</p>'
-            if (!strFirstName) strErrorMessages += '<p>First Name is required</p>'
-            if (!strLastName) strErrorMessages += '<p>Last Name is required</p>'
+            if (!strPassword) {
+                strErrorMessages += '<p>Password is required</p>'
+                blnError = true
+            }
+            if (!strFirstName) {
+                strErrorMessages += '<p>First Name is required</p>'
+                blnError = true
+            }
+            if (!strLastName) {
+                strErrorMessages += '<p>Last Name is required</p>'
+                blnError = true
+            }
 
-            if (strErrorMessages) {
+            if (blnError) {
                 Swal.fire({
                     title: "Registration Error",
                     html: strErrorMessages,
@@ -90,8 +106,9 @@
             arrRegisteredUsers.push(objNewUser)
 
             Swal.fire("Success!", "You have successfully registered!", "success")
-            $('#frmRegister').slideUp('slow')
-            $('#frmLogin').slideDown('fast')
+            $('#frmRegister').slideUp(function(){
+                $('#frmLogin').slideDown()
+            })
         })
 
         // Login Handler with aggregated SweetAlert errors
@@ -100,11 +117,18 @@
             const strPassword = $('#txtPassword').val().trim()
 
             let strErrorMessages = ''
+            let blnError = false
 
-            if (!strEmail) strErrorMessages += '<p>Email is required</p>'
-            if (!strPassword) strErrorMessages += '<p>Password is required</p>'
+            if (!strEmail) {
+                strErrorMessages += '<p>Email is required</p>'
+                blnError = true
+            }
+            if (!strPassword) {
+                strErrorMessages += '<p>Password is required</p>'
+                blnError = true
+            }
 
-            if (strErrorMessages) {
+            if (blnError) {
                 Swal.fire({
                     title: "Login Error",
                     html: strErrorMessages,

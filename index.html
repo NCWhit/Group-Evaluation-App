@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Eval - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/pulse/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-dark">
+    <div class="d-flex justify-content-center align-items-center vh-100">
+
+        <!--Login Form-->
+        <form class="card col-12 col-md-6 col-lg-5" id="frmLogin" aria-label="Login Form">
+            <div class="card-body">
+                <h1 class="text-center mb-0 text-primary">Tennessee Tech</h1>
+                <h3 class="text-center mb-4 text-secondary">Student Evaluation Login</h3>
+
+                <input id="txtUsername" class="form-control" type="email" placeholder="johndoe@tntech.edu" aria-label="Input for Login Email">
+                <input id="txtPassword" class="form-control mt-2" type="password" placeholder="Password" aria-label="Input for Login Password">
+                <hr />
+
+                <button class="btn btn-primary col-12 mt-2" type="button" id="btnLogin" aria-label="Log In Button">Log In</button>
+                <button class="btn btn-link col-12 mt-0" type="button" id="btnSwapLogin" aria-label="Switch to Registration Form">Need an account? Register here</button>
+            </div>
+        </form>
+
+        <!--Registration Form-->
+        <form class="card col-12 col-md-5 col-lg-4" id="frmRegister" style="display:none" aria-label="Registration Form">
+            <div class="card-body">
+                <h1 class="text-center mb-3 text-primary">TN Tech Student Evaluation</h1>
+                <h3 class="text-center mt-3 mb-4 text-secondary">User Registration</h3>
+
+                <input id="txtEmail" class="form-control" type="email" placeholder="Email" aria-label="Input for Registration Email">
+                <input id="txtPasswordRegister" class="form-control mt-2" type="password" placeholder="Password" aria-label="Input for Registration Password">
+                <input id="txtFirstName" class="form-control mt-2" type="text" placeholder="First Name" aria-label="Input for First Name">
+                <input id="txtLastName" class="form-control mt-2" type="text" placeholder="Last Name" aria-label="Input for Last Name">
+
+                <hr />
+
+                <button class="btn btn-primary col-12 mt-2" type="button" id="btnRegister" aria-label="Register">Register</button>
+                <button class="btn btn-link col-12 mt-0" type="button" id="btnSwapRegister" aria-label="Switch to Login Form">Already have an account? Log in here</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Array to hold all registered users (Being used to mimic backend database until it is added)
+        const arrRegisteredUsers = []
+
+        // Registration Handler with aggregated SweetAlert errors
+        document.querySelector('#btnRegister').addEventListener('click',(e) => {
+            const email = $('#txtEmail').val().trim().toLowerCase()
+            const password = $('#txtPasswordRegister').val()
+            const firstName = $('#txtFirstName').val()
+            const lastName = $('#txtLastName').val()
+
+            let errorMessages = ''
+
+            if (!email) errorMessages += '<p>Email is required</p>'
+            else if (!email.endsWith('@tntech.edu')) errorMessages += '<p>Email must be a TN Tech email</p>'
+
+            if (!password) errorMessages += '<p>Password is required</p>'
+            if (!firstName) errorMessages += '<p>First Name is required</p>'
+            if (!lastName) errorMessages += '<p>Last Name is required</p>'
+
+            if (errorMessages) {
+                Swal.fire({
+                    title: "Registration Error",
+                    html: errorMessages,
+                    icon: "error"
+                })
+                return
+            }
+
+            const objNewUser = {
+                email: email,
+                password: password,
+                firstName: firstName,
+                lastName: lastName
+            }
+
+            // Pushing new user onto "database"
+            arrRegisteredUsers.push(objNewUser)
+
+            Swal.fire("Success!", "You have successfully registered!", "success")
+            $('#frmRegister').slideUp('slow')
+            $('#frmLogin').slideDown('fast')
+        })
+
+        // Login Handler with aggregated SweetAlert errors
+        document.querySelector('#btnLogin').addEventListener('click',(e) => {
+            const strEmail = $('#txtUsername').val().trim().toLowerCase()
+            const strPassword = $('#txtPassword').val().trim()
+
+            let errorMessages = ''
+
+            if (!strEmail) errorMessages += '<p>Email is required</p>'
+            if (!strPassword) errorMessages += '<p>Password is required</p>'
+
+            if (errorMessages) {
+                Swal.fire({
+                    title: "Login Error",
+                    html: errorMessages,
+                    icon: "error"
+                })
+                return
+            }
+
+            const objUserFound = arrRegisteredUsers.find(user => user.email === strEmail && user.password === strPassword)
+
+            if (objUserFound) {
+                Swal.fire("Login Successful!", `Welcome, ${objUserFound.firstName} ${objUserFound.lastName}!`, "success")
+            } else {
+                Swal.fire("Login Failed", "Invalid email or password", "error")
+            }
+        })
+
+        // Toggle Forms
+        $('#btnSwapLogin').on('click',(e) => {
+            $('#frmLogin').slideUp(function(){
+                $('#frmRegister').slideDown()
+            })
+        })
+
+        $('#btnSwapRegister').on('click',(e) => {
+            $('#frmRegister').slideUp(function(){
+                $('#frmLogin').slideDown()
+            })
+        })
+    </script>
+</body>
+
+</html>

@@ -56,34 +56,34 @@
 
         // Registration Handler with aggregated SweetAlert errors
         document.querySelector('#btnRegister').addEventListener('click',(e) => {
-            const email = $('#txtEmail').val().trim().toLowerCase()
-            const password = $('#txtPasswordRegister').val()
-            const firstName = $('#txtFirstName').val()
-            const lastName = $('#txtLastName').val()
+            const strEmail = $('#txtEmail').val().trim().toLowerCase()
+            const strPassword = $('#txtPasswordRegister').val()
+            const strFirstName = $('#txtFirstName').val()
+            const strLastName = $('#txtLastName').val()
 
-            let errorMessages = ''
+            let strErrorMessages = ''
 
-            if (!email) errorMessages += '<p>Email is required</p>'
-            else if (!email.endsWith('@tntech.edu')) errorMessages += '<p>Email must be a TN Tech email</p>'
+            if (!strEmail) strErrorMessages += '<p>Email is required</p>'
+            else if (!strEmail.endsWith('@tntech.edu')) errorMessages += '<p>Email must be a TN Tech email</p>'
 
-            if (!password) errorMessages += '<p>Password is required</p>'
-            if (!firstName) errorMessages += '<p>First Name is required</p>'
-            if (!lastName) errorMessages += '<p>Last Name is required</p>'
+            if (!strPassword) strErrorMessages += '<p>Password is required</p>'
+            if (!strFirstName) strErrorMessages += '<p>First Name is required</p>'
+            if (!strLastName) strErrorMessages += '<p>Last Name is required</p>'
 
-            if (errorMessages) {
+            if (strErrorMessages) {
                 Swal.fire({
                     title: "Registration Error",
-                    html: errorMessages,
+                    html: strErrorMessages,
                     icon: "error"
                 })
                 return
             }
 
             const objNewUser = {
-                email: email,
-                password: password,
-                firstName: firstName,
-                lastName: lastName
+                email: strEmail,
+                password: strPassword,
+                firstName: strFirstName,
+                lastName: strLastName
             }
 
             // Pushing new user onto "database"
@@ -99,15 +99,15 @@
             const strEmail = $('#txtUsername').val().trim().toLowerCase()
             const strPassword = $('#txtPassword').val().trim()
 
-            let errorMessages = ''
+            let strErrorMessages = ''
 
-            if (!strEmail) errorMessages += '<p>Email is required</p>'
-            if (!strPassword) errorMessages += '<p>Password is required</p>'
+            if (!strEmail) strErrorMessages += '<p>Email is required</p>'
+            if (!strPassword) strErrorMessages += '<p>Password is required</p>'
 
-            if (errorMessages) {
+            if (strErrorMessages) {
                 Swal.fire({
                     title: "Login Error",
-                    html: errorMessages,
+                    html: strErrorMessages,
                     icon: "error"
                 })
                 return

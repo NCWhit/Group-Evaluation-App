@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Eval - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/pulse/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light">
+
+    <div class="container py-5">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h2 class="text-primary">Student Eval</h2>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span>Your Forms</span>
+                <button class="btn btn-success btn-sm" id="btnCreateForm">Create New Form</button>
+            </div>
+            <div class="card-body" id="formList">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <span>Joined Forms</span>
+                <button class="btn btn-light btn-sm" id="btnJoinForm">Join by Code</button>
+            </div>
+            <div class="card-body" id="joinedFormList">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+        
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+    // Redirect to builder
+    $('#btnCreateForm').on('click', () => {
+        window.location.href = 'form-builder.html';
+    });
+
+    // Load and display user's own forms
+    function loadForms() {
+        const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
+        const container = $('#formList');
+        container.empty();
+
+        if (savedForms.length === 0) {
+            container.html('<p class="text-muted">No forms created yet.</p>');
+            return;
+        }
+
+        savedForms.forEach((form, index) => {
+            const formCard = `
+                <div class="mb-3 p-3 border rounded bg-light text-dark">
+                    <h5>${form.name}</h5>
+                    <ul class="mb-0">
+                        ${form.questions.map((q, i) => `<li><strong>Q${i + 1}:</strong> ${q.label} <span class="badge bg-secondary">${q.type}</span></li>`).join('')}
+                    </ul>
+                </div>`;
+            container.append(formCard);
+        });
+    }
+
+    // Join Form Prompt
+    $('#btnJoinForm').on('click', () => {
+        Swal.fire({
+            title: 'Enter Form Code',
+            input: 'text',
+            inputPlaceholder: 'e.g., ABC123',
+            showCancelButton: true,
+            confirmButtonText: 'Join',
+        }).then(result => {
+            if (result.isConfirmed && result.value) {
+                const joinedForms = JSON.parse(localStorage.getItem('joinedForms') || '[]');
+                joinedForms.push({ code: result.value });
+                localStorage.setItem('joinedForms', JSON.stringify(joinedForms));
+                Swal.fire("Joined!", `Form Code: ${result.value}`, "success");
+                loadJoinedForms();
+            }
+        });
+    });
+
+    // Load joined forms
+    function loadJoinedForms() {
+        const joined = JSON.parse(localStorage.getItem('joinedForms')) || [];
+        const container = $('#joinedFormList');
+        container.empty();
+
+        if (joined.length === 0) {
+            container.html('<p class="text-muted">You have not joined any forms yet.</p>');
+            return;
+        }
+
+        joined.forEach((form, index) => {
+            container.append(`
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-light text-dark">
+                    <div><strong>Code:</strong> ${form.code}</div>
+                    <button class="btn btn-sm btn-danger" onclick="leaveJoinedForm(${index})">Leave</button>
+                </div>
+            `);
+        });
+    }
+
+    // Leave any joined form
+    function leaveJoinedForm(index) {
+        let joined = JSON.parse(localStorage.getItem('joinedForms')) || [];
+        const code = joined[index].code;
+
+        Swal.fire({
+            title: 'Leave Form?',
+            text: `Are you sure you want to leave form "${code}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, leave it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                joined.splice(index, 1);
+                localStorage.setItem('joinedForms', JSON.stringify(joined));
+                loadJoinedForms();
+                Swal.fire("Left!", `You have left the form "${code}".`, "success");
+            }
+        });
+    }
+
+    // Initial Load
+    loadForms();
+    loadJoinedForms();
+</script>
+
+</body>
+</html>

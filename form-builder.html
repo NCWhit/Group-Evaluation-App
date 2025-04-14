@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studen Eval - Builder</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/pulse/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark">
+    <div class="container py-5">
+        <div class="card mb-4">
+            <h1 class="text-center text-primary mt-2 mb-2">Evaluation Builder</h1>
+        </div>
+
+        <!-- Form Builder -->
+        <div class="card mb-4">
+            <div class="card-header">Form Name</div>
+            <div class="card-body">
+                <input type="text" id="formName" class="form-control" placeholder="Enter form name">
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">Add New Question</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <input type="text" id="newLabel" class="form-control" placeholder="Enter question text">
+                </div>
+                <div class="mb-3">
+                    <select id="newType" class="form-select">
+                        <option value="short">Short Answer</option>
+                        <option value="multiple">Multiple Choice</option>
+                        <option value="likert">Likert Scale</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="newOptionsContainer" style="display: none;">
+                    <input type="text" id="newOptions" class="form-control" placeholder="Comma-separated options">
+                </div>
+                <button id="addQuestionBtn" class="btn btn-primary">Add Question</button>
+                <button id="saveFormBtn" class="btn btn-success ms-2">Save Form</button>
+                <button id="toggleViewBtn" class="btn btn-secondary ms-2">View Form</button>
+            </div>
+        </div>
+
+        <!-- Form Display -->
+        <div class="card">
+            <div class="card-header">Form Editor</div>
+            <div class="card-body" id="formContainer">
+                <form id="customForm"></form>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const customForm = document.getElementById('customForm');
+        const newLabel = document.getElementById('newLabel');
+        const newType = document.getElementById('newType');
+        const newOptionsContainer = document.getElementById('newOptionsContainer');
+        const newOptions = document.getElementById('newOptions');
+        const toggleViewBtn = document.getElementById('toggleViewBtn');
+
+        newType.addEventListener('change', (e) => {
+            newOptionsContainer.style.display = newType.value === 'multiple' ? 'block' : 'none';
+        });
+
+        let questions = [];
+        let viewMode = false;
+
+        function addQuestion() {
+            const label = newLabel.value.trim();
+            const type = newType.value;
+            const options = type === 'multiple' ? newOptions.value.split(',').map(o => o.trim()).filter(Boolean) : [];
+
+            if (label) {
+                questions.push({ label, type, options });
+                newLabel.value = '';
+                newOptions.value = '';
+                renderForm();
+            }
+        }
+
+        function deleteQuestion(index) {
+            if (confirm('Are you sure you want to delete this question?')) {
+                questions.splice(index, 1);
+                renderForm();
+            }
+        }
+
+        function saveForm() {
+            const name = document.getElementById('formName').value.trim();
+            if (!name) {
+                Swal.fire("Error", "Please enter a form name.", "error");
+                return;
+            }
+
+            const formObject = {
+                name: name,
+                questions: questions
+            };
+
+            // Save as array of forms
+            const existingForms = JSON.parse(localStorage.getItem('userForms') || '[]');
+            existingForms.push(formObject);
+            localStorage.setItem('userForms', JSON.stringify(existingForms));
+
+            Swal.fire("Success!", "Saved Successfully!", "success").then(() => {
+                window.location.href = 'dashboard.html';
+            });
+        }
+
+
+
+        function toggleViewMode() {
+            viewMode = !viewMode;
+            if (viewMode) {
+                questions = JSON.parse(localStorage.getItem('groupEvaluationForm')) || [];
+                toggleViewBtn.textContent = 'Edit Form';
+            } else {
+                toggleViewBtn.textContent = 'Fill Form';
+            }
+            renderForm();
+        }
+
+        function renderForm() {
+            customForm.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'mb-4';
+
+                const labelElem = document.createElement('label');
+                labelElem.className = 'form-label fw-bold';
+                labelElem.textContent = q.label;
+                formGroup.appendChild(labelElem);
+
+                if (!viewMode) {
+                    const labelEdit = document.createElement('input');
+                    labelEdit.type = 'text';
+                    labelEdit.className = 'form-control mb-2';
+                    labelEdit.value = q.label;
+                    labelEdit.addEventListener('change', (e) => {
+                        questions[index].label = e.target.value;
+                    });
+                    formGroup.appendChild(labelEdit);
+
+                    const typeSelect = document.createElement('select');
+                    typeSelect.className = 'form-select mb-2';
+                    ['short', 'multiple', 'likert'].forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                        if (q.type === type) option.selected = true;
+                        typeSelect.appendChild(option);
+                    });
+                    typeSelect.addEventListener('change', (e) => {
+                        questions[index].type = e.target.value;
+                        if (e.target.value !== 'multiple') {
+                            questions[index].options = [];
+                        }
+                        renderForm();
+                    });
+                    formGroup.appendChild(typeSelect);
+                }
+
+                if (q.type === 'short') {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.placeholder = 'Your answer';
+                    input.disabled = !viewMode;
+                    formGroup.appendChild(input);
+                } else if (q.type === 'multiple') {
+                    if (!viewMode) {
+                        const optionsInput = document.createElement('input');
+                        optionsInput.type = 'text';
+                        optionsInput.className = 'form-control mb-2';
+                        optionsInput.value = q.options.join(', ');
+                        optionsInput.addEventListener('change', (e) => {
+                            questions[index].options = e.target.value.split(',').map(opt => opt.trim()).filter(Boolean);
+                            renderForm();
+                        });
+                        formGroup.appendChild(optionsInput);
+                    }
+                    q.options.forEach(opt => {
+                        const div = document.createElement('div');
+                        div.className = 'form-check';
+                        const input = document.createElement('input');
+                        input.className = 'form-check-input';
+                        input.type = 'radio';
+                        input.name = `q_${index}`;
+                        input.value = opt;
+                        input.disabled = !viewMode;
+                        const label = document.createElement('label');
+                        label.className = 'form-check-label';
+                        label.textContent = opt;
+                        div.appendChild(input);
+                        div.appendChild(label);
+                        formGroup.appendChild(div);
+                    });
+                } else if (q.type === 'likert') {
+                    const scale = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+                    scale.forEach((opt, i) => {
+                        const div = document.createElement('div');
+                        div.className = 'form-check';
+                        const input = document.createElement('input');
+                        input.className = 'form-check-input';
+                        input.type = 'radio';
+                        input.name = `q_${index}`;
+                        input.value = opt;
+                        input.disabled = !viewMode;
+                        const label = document.createElement('label');
+                        label.className = 'form-check-label';
+                        label.textContent = `${i + 1} - ${opt}`;
+                        div.appendChild(input);
+                        div.appendChild(label);
+                        formGroup.appendChild(div);
+                    });
+                }
+
+                if (!viewMode) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-sm btn-danger mt-2';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.type = 'button';
+                    deleteBtn.onclick = () => deleteQuestion(index);
+                    formGroup.appendChild(deleteBtn);
+                }
+
+                customForm.appendChild(formGroup);
+            });
+
+            if (viewMode && questions.length > 0) {
+                const submitBtn = document.createElement('button');
+                submitBtn.className = 'btn btn-primary';
+                submitBtn.textContent = 'Submit Evaluation';
+                submitBtn.type = 'submit';
+                customForm.appendChild(submitBtn);
+            }
+        }
+        
+        // Event listners for each function
+        document.querySelector('#addQuestionBtn').addEventListener('click', addQuestion);
+        document.querySelector('#saveFormBtn').addEventListener('click', saveForm);
+        document.querySelector('#toggleViewBtn').addEventListener('click', toggleViewMode);
+
+        // Load default form for builder view
+        questions = [
+            { label: 'Example Likert', type: 'likert', options: [] },
+            { label: 'Example Short Awnser', type: 'short', options: [] },
+            { label: 'Example Multiple Choice', type: 'multiple', options: ['Option A', 'Option B', 'Option C'] }
+        ];
+        renderForm();
+    </script>
+</body>
+</html>

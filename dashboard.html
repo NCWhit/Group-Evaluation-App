@@ -65,6 +65,7 @@
                         ${form.questions.map((q, i) => `<li><strong>Q${i + 1}:</strong> ${q.label} <span class="badge bg-secondary">${q.type}</span></li>`).join('')}
                     </ul>
                     <button class="btn btn-secondary btn-sm mt-2" onclick="editForm(${index})">Edit</button>
+                    <button class="btn btn-info btn-sm mt-2 ms-2" onclick="viewJoinCode(${index})">Join Code</button>
                 </div>`;
             container.append(formCard);
         });
@@ -74,6 +75,25 @@
     function editForm(index) {
         localStorage.setItem('editFormIndex', index);
         window.location.href = 'form-builder.html';
+    }
+    
+    // function to view the join code associated with a form
+    function viewJoinCode(index) {
+        const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
+        const form = savedForms[index];
+        if (form && form.code) {
+            Swal.fire({
+                title: 'Join Code',
+                text: `The join code for this form is: ${form.code}`,
+                icon: 'info'
+        })
+        } else {
+             Swal.fire({
+                title: 'No Join Code',
+                text: 'This form does not have a join code.',
+                icon: 'warning'
+            });
+        }
     }
 
     // Join Form Prompt

@@ -36,9 +36,19 @@
                 <div class="mb-3" id="newOptionsContainer" style="display: none;">
                     <input type="text" id="newOptions" class="form-control" placeholder="Comma-separated options">
                 </div>
-                <button id="addQuestionBtn" class="btn btn-primary">Add Question</button>
-                <button id="saveFormBtn" class="btn btn-success ms-2">Save Form</button>
-                <button id="toggleViewBtn" class="btn btn-secondary ms-2">View Form</button>
+                <!-- Button Group Rearranged into Two Rows -->
+                <div class="d-flex flex-column">
+                    <div>
+                        <button id="addQuestionBtn" class="btn btn-primary">Add Question</button>
+                        <button id="saveFormBtn" class="btn btn-success ml-2">Save Form</button>
+                    </div>
+                    <div class="mt-2">
+                        <!-- Toggle view mode button now labeled "Preview Form" by default -->
+                        <button id="toggleViewBtn" class="btn btn-secondary">Preview Form</button>
+                        <!-- New Delete Form button -->
+                        <button id="deleteFormBtn" class="btn btn-danger ml-2">Delete Form</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -61,8 +71,9 @@
         const newOptionsContainer = document.getElementById('newOptionsContainer');
         const newOptions = document.getElementById('newOptions');
         const toggleViewBtn = document.getElementById('toggleViewBtn');
+        const deleteFormBtn = document.getElementById('deleteFormBtn');
 
-        newType.addEventListener('change', (e) => {
+        newType.addEventListener('change', () => {
             newOptionsContainer.style.display = newType.value === 'multiple' ? 'block' : 'none';
         });
 
@@ -72,7 +83,6 @@
         // Initialization: Check if editing a form
         const editFormIndex = localStorage.getItem('editFormIndex');
         if (editFormIndex !== null) {
-            // Retrieve saved forms and load the one for editing
             const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
             const formToEdit = savedForms[parseInt(editFormIndex)];
             if (formToEdit) {
@@ -86,7 +96,6 @@
                 ];
             }
         } else {
-            // No edit indicator, so use default questions (for new forms)
             questions = [
                 { label: 'Example Likert', type: 'likert', options: [] },
                 { label: 'Example Short Answer', type: 'short', options: [] },
@@ -109,7 +118,6 @@
             const label = newLabel.value.trim();
             const type = newType.value;
             const options = type === 'multiple' ? newOptions.value.split(',').map(o => o.trim()).filter(Boolean) : [];
-
             if (label) {
                 questions.push({ label, type, options });
                 newLabel.value = '';
@@ -136,11 +144,9 @@
             const editFormIndex = localStorage.getItem('editFormIndex');
             let joinCode;
             if (editFormIndex !== null) {
-                // If editing, preserve the existing join code (or generate one if missing)
                 const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
                 joinCode = savedForms[parseInt(editFormIndex)]?.joinCode || generateJoinCode();
             } else {
-                // New form, generate join code
                 joinCode = generateJoinCode();
             }
 
@@ -151,42 +157,66 @@
             };
 
             let existingForms = JSON.parse(localStorage.getItem('userForms') || '[]');
-
             if (editFormIndex !== null) {
-                // Update the existing form at the stored index
                 existingForms[parseInt(editFormIndex)] = formObject;
-                // Editing is finished, remove the index from localStorage
                 localStorage.removeItem('editFormIndex');
             } else {
-                // Save as new form if not editing
                 existingForms.push(formObject);
             }
-
             localStorage.setItem('userForms', JSON.stringify(existingForms));
-
             Swal.fire("Success!", "Saved Successfully!", "success").then(() => {
                 window.location.href = 'dashboard.html';
             });
         }
 
+        // Toggle between edit and preview mode.
+        // When not in preview (viewMode=false), the button says "Preview Form".
+        // When in preview mode, it changes to "Edit Form".
         function toggleViewMode() {
             viewMode = !viewMode;
+            toggleViewBtn.textContent = viewMode ? 'Edit Form' : 'Preview Form';
             if (viewMode) {
                 questions = JSON.parse(localStorage.getItem('groupEvaluationForm')) || [];
-                toggleViewBtn.textContent = 'Edit Form';
-            } else {
-                toggleViewBtn.textContent = 'Fill Form';
             }
             renderForm();
         }
 
+        // function to delete the entire form
+        function deleteForm() {
+            const editFormIndex = localStorage.getItem('editFormIndex');
+            if (editFormIndex === null) {
+                Swal.fire({
+                    title: "Error",
+                    text: "No form is currently being edited.",
+                    icon: "error",
+                    confirmButtonText: "OK"
+                });
+                return;
+            }
+            Swal.fire({
+                title: "Delete Form?",
+                text: "Are you sure you want to delete this form?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete form"
+            }).then(result => {
+                if (result.isConfirmed) {
+                    let forms = JSON.parse(localStorage.getItem('userForms')) || [];
+                    forms.splice(parseInt(editFormIndex), 1);
+                    localStorage.setItem('userForms', JSON.stringify(forms));
+                    localStorage.removeItem('editFormIndex');
+                    Swal.fire("Deleted!", "The form has been deleted.", "success").then(() => {
+                        window.location.href = 'dashboard.html';
+                    });
+                }
+            });
+        }
+
         function renderForm() {
             customForm.innerHTML = '';
-
             questions.forEach((q, index) => {
                 const formGroup = document.createElement('div');
                 formGroup.className = 'mb-4';
-
                 const labelElem = document.createElement('label');
                 labelElem.className = 'form-label fw-bold';
                 labelElem.textContent = q.label;
@@ -197,11 +227,8 @@
                     labelEdit.type = 'text';
                     labelEdit.className = 'form-control mb-2';
                     labelEdit.value = q.label;
-                    labelEdit.addEventListener('change', (e) => {
-                        questions[index].label = e.target.value;
-                    });
+                    labelEdit.addEventListener('change', (e) => { questions[index].label = e.target.value; });
                     formGroup.appendChild(labelEdit);
-
                     const typeSelect = document.createElement('select');
                     typeSelect.className = 'form-select mb-2';
                     ['short', 'multiple', 'likert'].forEach(type => {
@@ -213,9 +240,7 @@
                     });
                     typeSelect.addEventListener('change', (e) => {
                         questions[index].type = e.target.value;
-                        if (e.target.value !== 'multiple') {
-                            questions[index].options = [];
-                        }
+                        if (e.target.value !== 'multiple') { questions[index].options = []; }
                         renderForm();
                     });
                     formGroup.appendChild(typeSelect);
@@ -284,10 +309,8 @@
                     deleteBtn.onclick = () => deleteQuestion(index);
                     formGroup.appendChild(deleteBtn);
                 }
-
                 customForm.appendChild(formGroup);
             });
-
             if (viewMode && questions.length > 0) {
                 const submitBtn = document.createElement('button');
                 submitBtn.className = 'btn btn-primary';
@@ -296,11 +319,12 @@
                 customForm.appendChild(submitBtn);
             }
         }
-        
-        // Event listeners for each function
+
+        // Event listeners for buttons
         document.querySelector('#addQuestionBtn').addEventListener('click', addQuestion);
         document.querySelector('#saveFormBtn').addEventListener('click', saveForm);
         document.querySelector('#toggleViewBtn').addEventListener('click', toggleViewMode);
+        document.querySelector('#deleteFormBtn').addEventListener('click', deleteForm);
     </script>
 </body>
 </html>

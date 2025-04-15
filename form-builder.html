@@ -67,8 +67,34 @@
             newOptionsContainer.style.display = newType.value === 'multiple' ? 'block' : 'none';
         });
 
-        let questions = [];
+        let questions = []; // declare questions variable
         let viewMode = false;
+
+        // Initialization: Check if editing a form
+        const editFormIndex = localStorage.getItem('editFormIndex');
+        if (editFormIndex !== null) {
+            // Retrieve saved forms and load the one for editing
+            const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
+            const formToEdit = savedForms[parseInt(editFormIndex)];
+            if (formToEdit) {
+                document.getElementById('formName').value = formToEdit.name;
+                questions = formToEdit.questions;
+            } else {
+                questions = [
+                    { label: 'Example Likert', type: 'likert', options: [] },
+                    { label: 'Example Short Answer', type: 'short', options: [] },
+                    { label: 'Example Multiple Choice', type: 'multiple', options: ['Option A', 'Option B', 'Option C'] }
+                ];
+            }
+        } else {
+            // No edit indicator, so use default questions (for new forms)
+            questions = [
+                { label: 'Example Likert', type: 'likert', options: [] },
+                { label: 'Example Short Answer', type: 'short', options: [] },
+                { label: 'Example Multiple Choice', type: 'multiple', options: ['Option A', 'Option B', 'Option C'] }
+            ];
+        }
+        renderForm();
 
         function addQuestion() {
             const label = newLabel.value.trim();
@@ -102,17 +128,25 @@
                 questions: questions
             };
 
-            // Save as array of forms
-            const existingForms = JSON.parse(localStorage.getItem('userForms') || '[]');
-            existingForms.push(formObject);
+            let existingForms = JSON.parse(localStorage.getItem('userForms') || '[]');
+
+            const editFormIndex = localStorage.getItem('editFormIndex');
+            if (editFormIndex !== null) {
+                // Update the existing form at the stored index
+                existingForms[parseInt(editFormIndex)] = formObject;
+                // Remove the indicator since editing is now finished
+                localStorage.removeItem('editFormIndex');
+            } else {
+                // Save as new form if not editing
+                existingForms.push(formObject);
+            }
+
             localStorage.setItem('userForms', JSON.stringify(existingForms));
 
             Swal.fire("Success!", "Saved Successfully!", "success").then(() => {
                 window.location.href = 'dashboard.html';
             });
         }
-
-
 
         function toggleViewMode() {
             viewMode = !viewMode;
@@ -246,14 +280,6 @@
         document.querySelector('#addQuestionBtn').addEventListener('click', addQuestion);
         document.querySelector('#saveFormBtn').addEventListener('click', saveForm);
         document.querySelector('#toggleViewBtn').addEventListener('click', toggleViewMode);
-
-        // Load default form for builder view
-        questions = [
-            { label: 'Example Likert', type: 'likert', options: [] },
-            { label: 'Example Short Awnser', type: 'short', options: [] },
-            { label: 'Example Multiple Choice', type: 'multiple', options: ['Option A', 'Option B', 'Option C'] }
-        ];
-        renderForm();
     </script>
 </body>
 </html>

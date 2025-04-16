@@ -33,7 +33,7 @@
                         <option value="likert">Likert Scale</option>
                     </select>
                 </div>
-                <div class="mb-3" id="newOptionsContainer" style="display: none;">
+                <div class="mb-3" id="newOptionsContainer" style="display: none">
                     <input type="text" id="newOptions" class="form-control" placeholder="Comma-separated options">
                 </div>
                 <!-- Button Group Rearranged into Two Rows -->
@@ -45,7 +45,7 @@
                     <div class="mt-2">
                         <!-- Toggle view mode button now labeled "Preview Form" by default -->
                         <button id="toggleViewBtn" class="btn btn-secondary">Preview Form</button>
-                        <!-- New Delete Form button -->
+                        <!-- Delete Form button -->
                         <button id="deleteFormBtn" class="btn btn-danger ml-2">Delete Form</button>
                     </div>
                 </div>
@@ -65,129 +65,134 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const customForm = document.getElementById('customForm');
-        const newLabel = document.getElementById('newLabel');
-        const newType = document.getElementById('newType');
-        const newOptionsContainer = document.getElementById('newOptionsContainer');
-        const newOptions = document.getElementById('newOptions');
-        const toggleViewBtn = document.getElementById('toggleViewBtn');
-        const deleteFormBtn = document.getElementById('deleteFormBtn');
+        const elemCustomForm = document.getElementById('customForm')
+        const elemNewLabel = document.getElementById('newLabel')
+        const elemNewType = document.getElementById('newType')
+        const elemNewOptionsContainer = document.getElementById('newOptionsContainer')
+        const strNewOptions = document.getElementById('newOptions')
+        const btnToggleView = document.getElementById('toggleViewBtn')
 
-        newType.addEventListener('change', () => {
-            newOptionsContainer.style.display = newType.value === 'multiple' ? 'block' : 'none';
-        });
+        elemNewType.addEventListener('change', () => {
+            elemNewOptionsContainer.style.display = elemNewType.value === 'multiple' ? 'block' : 'none';
+        })
 
-        let questions = []; // declare questions variable
-        let viewMode = false;
+        let arrQuestions = [] // declare questions variable
+        let boolViewMode = false
 
-        // Initialization: Check if editing a form
-        const editFormIndex = localStorage.getItem('editFormIndex');
-        if (editFormIndex !== null) {
-            const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
-            const formToEdit = savedForms[parseInt(editFormIndex)];
-            if (formToEdit) {
-                document.getElementById('formName').value = formToEdit.name;
-                questions = formToEdit.questions;
-            } else {
-                questions = [
+        // Check if in edit mode and load the form if so
+        const intEditFormIndex = localStorage.getItem('editFormIndex')
+        if (intEditFormIndex !== null) {
+
+            const arrFormsSaved = JSON.parse(localStorage.getItem('userForms')) || []; // get saved forms
+            const objFormToEdit = arrFormsSaved[parseInt(intEditFormIndex)]
+            if (objFormToEdit) { // if form exists load it
+                document.getElementById('formName').value = objFormToEdit.name
+                arrQuestions = objFormToEdit.questions
+            } else { // if it does not then it's a new form, generate sample questions
+                arrQuestions = [
                     { label: 'Example Likert', type: 'likert', options: [] },
                     { label: 'Example Short Answer', type: 'short', options: [] },
                     { label: 'Example Multiple Choice', type: 'multiple', options: ['Option A', 'Option B', 'Option C'] }
-                ];
+                ]
             }
         } else {
-            questions = [
+            arrQuestions = [
                 { label: 'Example Likert', type: 'likert', options: [] },
                 { label: 'Example Short Answer', type: 'short', options: [] },
                 { label: 'Example Multiple Choice', type: 'multiple', options: ['Option A', 'Option B', 'Option C'] }
-            ];
+            ]
         }
-        renderForm();
+        renderForm()
 
         // Generate a random 6-character alphanumeric join code
         function generateJoinCode() {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
+            const strCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+            let strCode = ''
             for (let i = 0; i < 6; i++) {
-                code += characters.charAt(Math.floor(Math.random() * characters.length));
+                strCode += strCharacters.charAt(Math.floor(Math.random() * strCharacters.length))
             }
-            return code;
+            return strCode
         }
 
+        // function to add a new question by building a new object and pushing it to the questions array
         function addQuestion() {
-            const label = newLabel.value.trim();
-            const type = newType.value;
-            const options = type === 'multiple' ? newOptions.value.split(',').map(o => o.trim()).filter(Boolean) : [];
+            const label = elemNewLabel.value.trim()
+            const type = elemNewType.value
+            const options = type === 'multiple' ? strNewOptions.value.split(',').map(o => o.trim()).filter(Boolean) : []
+
             if (label) {
-                questions.push({ label, type, options });
-                newLabel.value = '';
-                newOptions.value = '';
-                renderForm();
+                arrQuestions.push({ label, type, options })
+                elemNewLabel.value = ''
+                strNewOptions.value = ''
+                renderForm()
             }
         }
 
+        // function to delete a question from the questions array
         function deleteQuestion(index) {
             if (confirm('Are you sure you want to delete this question?')) {
-                questions.splice(index, 1);
-                renderForm();
+                arrQuestions.splice(index, 1)
+                renderForm()
             }
         }
 
-        // Updated saveForm function that generates a join code
+        // save form, checks that a name was entered and generates a join code if not in edit mode
         function saveForm() {
-            const name = document.getElementById('formName').value.trim();
-            if (!name) {
-                Swal.fire("Error", "Please enter a form name.", "error");
-                return;
+            const strName = document.getElementById('formName').value.trim()
+            if (!strName) {
+                Swal.fire("Error", "Please enter a form name.", "error")
+                return
             }
 
-            const editFormIndex = localStorage.getItem('editFormIndex');
-            let joinCode;
-            if (editFormIndex !== null) {
-                const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
-                joinCode = savedForms[parseInt(editFormIndex)]?.joinCode || generateJoinCode();
+            const intEditFormIndex = localStorage.getItem('editFormIndex')
+            let strJoinCode
+            if (intEditFormIndex !== null) {
+                const arrFormsSaved = JSON.parse(localStorage.getItem('userForms')) || []; // get saved forms
+                strJoinCode = arrFormsSaved[parseInt(intEditFormIndex)]?.code || generateJoinCode() // if editing, keep the same join code
             } else {
-                joinCode = generateJoinCode();
+                strJoinCode = generateJoinCode()
             }
 
-            const formObject = {
-                name: name,
-                questions: questions,
-                code: joinCode
-            };
-
-            let existingForms = JSON.parse(localStorage.getItem('userForms') || '[]');
-            if (editFormIndex !== null) {
-                existingForms[parseInt(editFormIndex)] = formObject;
-                localStorage.removeItem('editFormIndex');
-            } else {
-                existingForms.push(formObject);
+            // build form object to save to localStorage
+            const objForm = {
+                name: strName,
+                questions: arrQuestions,
+                code: strJoinCode
             }
-            localStorage.setItem('userForms', JSON.stringify(existingForms));
+
+            // save form to localStorage, add to existing forms if they exist
+            let arrExistingForms = JSON.parse(localStorage.getItem('userForms') || '[]') 
+            if (intEditFormIndex !== null) { // if editing, replace the existing form
+                arrExistingForms[parseInt(intEditFormIndex)] = objForm
+                localStorage.removeItem('editFormIndex')
+            } else { // if not editing, add to the array
+                arrExistingForms.push(objForm)
+            }
+            localStorage.setItem('userForms', JSON.stringify(arrExistingForms))
             Swal.fire("Success!", "Saved Successfully!", "success").then(() => {
-                window.location.href = 'dashboard.html';
-            });
+                window.location.href = 'dashboard.html'
+            })
         }
 
         // Toggle between edit and preview mode.
         // When not in preview (viewMode=false), the button says "Preview Form".
         // When in preview mode, it changes to "Edit Form".
         function toggleViewMode() {
-            viewMode = !viewMode;
-            toggleViewBtn.textContent = viewMode ? 'Edit Form' : 'Preview Form';
-            if (viewMode) {
-                questions = JSON.parse(localStorage.getItem('groupEvaluationForm')) || [];
+            boolViewMode = !boolViewMode
+            btnToggleView.textContent = boolViewMode ? 'Edit Form' : 'Preview Form'
+            if (boolViewMode) {
+                arrQuestions = JSON.parse(localStorage.getItem('groupEvaluationForm')) || []
             }
-            renderForm();
+            renderForm()
         }
 
         // function to delete the entire form
         function deleteForm() {
-            const editFormIndex = localStorage.getItem('editFormIndex');
-            if (editFormIndex === null) {
+            const intEditFormIndex = localStorage.getItem('editFormIndex')
+            if (intEditFormIndex === null) {
                 Swal.fire({
                     title: "Error",
-                    text: "No form is currently being edited.",
+                    text: "Please Save new form before using Delete.",
                     icon: "error",
                     confirmButtonText: "OK"
                 });
@@ -202,129 +207,135 @@
             }).then(result => {
                 if (result.isConfirmed) {
                     let forms = JSON.parse(localStorage.getItem('userForms')) || [];
-                    forms.splice(parseInt(editFormIndex), 1);
-                    localStorage.setItem('userForms', JSON.stringify(forms));
-                    localStorage.removeItem('editFormIndex');
+                    forms.splice(parseInt(intEditFormIndex), 1)
+                    localStorage.setItem('userForms', JSON.stringify(forms))
+                    localStorage.removeItem('editFormIndex')
                     Swal.fire("Deleted!", "The form has been deleted.", "success").then(() => {
-                        window.location.href = 'dashboard.html';
-                    });
+                        window.location.href = 'dashboard.html'
+                    })
                 }
-            });
+            })
         }
 
+        // function to render the form based on the questions array
         function renderForm() {
-            customForm.innerHTML = '';
-            questions.forEach((q, index) => {
-                const formGroup = document.createElement('div');
-                formGroup.className = 'mb-4';
-                const labelElem = document.createElement('label');
-                labelElem.className = 'form-label fw-bold';
-                labelElem.textContent = q.label;
-                formGroup.appendChild(labelElem);
+            elemCustomForm.innerHTML = ''
 
-                if (!viewMode) {
-                    const labelEdit = document.createElement('input');
-                    labelEdit.type = 'text';
-                    labelEdit.className = 'form-control mb-2';
-                    labelEdit.value = q.label;
-                    labelEdit.addEventListener('change', (e) => { questions[index].label = e.target.value; });
-                    formGroup.appendChild(labelEdit);
-                    const typeSelect = document.createElement('select');
+            // for each question in the array, create a form group with the question label and input type
+            arrQuestions.forEach((q, index) => {
+                const elemFormGroup = document.createElement('div')
+                elemFormGroup.className = 'mb-4'
+                const elemLabel = document.createElement('label')
+                elemLabel.className = 'form-label fw-bold';
+                elemLabel.textContent = q.label
+                elemFormGroup.appendChild(elemLabel)
+                
+                // if in view mode, disable the input fields and show the question type
+                if (!boolViewMode) {
+                    const elemLabelEdit = document.createElement('input')
+                    elemLabelEdit.type = 'text'
+                    elemLabelEdit.className = 'form-control mb-2'
+                    elemLabelEdit.value = q.label
+                    elemLabelEdit.addEventListener('change', (e) => { arrQuestions[index].label = e.target.value; });
+                    elemFormGroup.appendChild(elemLabelEdit)
+                    const typeSelect = document.createElement('select')
                     typeSelect.className = 'form-select mb-2';
                     ['short', 'multiple', 'likert'].forEach(type => {
-                        const option = document.createElement('option');
-                        option.value = type;
-                        option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                        const option = document.createElement('option')
+                        option.value = type
+                        option.textContent = type.charAt(0).toUpperCase() + type.slice(1)
                         if (q.type === type) option.selected = true;
-                        typeSelect.appendChild(option);
-                    });
+                        typeSelect.appendChild(option)
+                    })
                     typeSelect.addEventListener('change', (e) => {
-                        questions[index].type = e.target.value;
-                        if (e.target.value !== 'multiple') { questions[index].options = []; }
-                        renderForm();
-                    });
-                    formGroup.appendChild(typeSelect);
+                        arrQuestions[index].type = e.target.value
+                        if (e.target.value !== 'multiple') { arrQuestions[index].options = []; }
+                        renderForm()
+                    })
+                    elemFormGroup.appendChild(typeSelect)
                 }
 
+                // generate the input fields based on the question type
                 if (q.type === 'short') {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.className = 'form-control';
-                    input.placeholder = 'Your answer';
-                    input.disabled = !viewMode;
-                    formGroup.appendChild(input);
+                    const elemInput = document.createElement('input');
+                    elemInput.type = 'text';
+                    elemInput.className = 'form-control';
+                    elemInput.placeholder = 'Your answer';
+                    elemInput.disabled = !boolViewMode
+                    elemFormGroup.appendChild(elemInput)
                 } else if (q.type === 'multiple') {
-                    if (!viewMode) {
-                        const optionsInput = document.createElement('input');
-                        optionsInput.type = 'text';
-                        optionsInput.className = 'form-control mb-2';
-                        optionsInput.value = q.options.join(', ');
-                        optionsInput.addEventListener('change', (e) => {
-                            questions[index].options = e.target.value.split(',').map(opt => opt.trim()).filter(Boolean);
-                            renderForm();
-                        });
-                        formGroup.appendChild(optionsInput);
+                    if (!boolViewMode) {
+                        const elemOptionsInput = document.createElement('input')
+                        elemOptionsInput.type = 'text';
+                        elemOptionsInput.className = 'form-control mb-2';
+                        elemOptionsInput.value = q.options.join(', ')
+                        elemOptionsInput.addEventListener('change', (e) => {
+                            arrQuestions[index].options = e.target.value.split(',').map(opt => opt.trim()).filter(Boolean)
+                            renderForm()
+                        })
+                        elemFormGroup.appendChild(elemOptionsInput)
                     }
+                    // iterate through the options to create radio buttons for multiple choice
                     q.options.forEach(opt => {
                         const div = document.createElement('div');
                         div.className = 'form-check';
-                        const input = document.createElement('input');
-                        input.className = 'form-check-input';
-                        input.type = 'radio';
-                        input.name = `q_${index}`;
-                        input.value = opt;
-                        input.disabled = !viewMode;
-                        const label = document.createElement('label');
+                        const elemInput = document.createElement('input');
+                        elemInput.className = 'form-check-input';
+                        elemInput.type = 'radio';
+                        elemInput.name = `q_${index}`;
+                        elemInput.value = opt
+                        elemInput.disabled = !boolViewMode
+                        const label = document.createElement('label')
                         label.className = 'form-check-label';
-                        label.textContent = opt;
-                        div.appendChild(input);
-                        div.appendChild(label);
-                        formGroup.appendChild(div);
-                    });
+                        label.textContent = opt
+                        div.appendChild(elemInput)
+                        div.appendChild(label)
+                        elemFormGroup.appendChild(div)
+                    })
                 } else if (q.type === 'likert') {
-                    const scale = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+                    const scale = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree']
                     scale.forEach((opt, i) => {
-                        const div = document.createElement('div');
+                        const div = document.createElement('div')
                         div.className = 'form-check';
-                        const input = document.createElement('input');
-                        input.className = 'form-check-input';
-                        input.type = 'radio';
-                        input.name = `q_${index}`;
-                        input.value = opt;
-                        input.disabled = !viewMode;
+                        const elemInput = document.createElement('input')
+                        elemInput.className = 'form-check-input';
+                        elemInput.type = 'radio';
+                        elemInput.name = `q_${index}`;
+                        elemInput.value = opt
+                        elemInput.disabled = !boolViewMode
                         const label = document.createElement('label');
                         label.className = 'form-check-label';
                         label.textContent = `${i + 1} - ${opt}`;
-                        div.appendChild(input);
-                        div.appendChild(label);
-                        formGroup.appendChild(div);
-                    });
+                        div.appendChild(elemInput)
+                        div.appendChild(label)
+                        elemFormGroup.appendChild(div)
+                    })
                 }
 
-                if (!viewMode) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'btn btn-sm btn-danger mt-2';
-                    deleteBtn.textContent = 'Delete';
-                    deleteBtn.type = 'button';
-                    deleteBtn.onclick = () => deleteQuestion(index);
-                    formGroup.appendChild(deleteBtn);
+                if (!boolViewMode) {
+                    const btnDelete = document.createElement('button')
+                    btnDelete.className = 'btn btn-sm btn-danger mt-2';
+                    btnDelete.textContent = 'Delete';
+                    btnDelete.type = 'button';
+                    btnDelete.onclick = () => deleteQuestion(index)
+                    elemFormGroup.appendChild(btnDelete)
                 }
-                customForm.appendChild(formGroup);
-            });
-            if (viewMode && questions.length > 0) {
-                const submitBtn = document.createElement('button');
-                submitBtn.className = 'btn btn-primary';
-                submitBtn.textContent = 'Submit Evaluation';
-                submitBtn.type = 'submit';
-                customForm.appendChild(submitBtn);
+                elemCustomForm.appendChild(elemFormGroup)
+            })
+            if (boolViewMode && arrQuestions.length > 0) {
+                const btnSubmit = document.createElement('button')
+                btnSubmit.className = 'btn btn-primary';
+                btnSubmit.textContent = 'Submit Evaluation';
+                btnSubmit.type = 'submit';
+                elemCustomForm.appendChild(btnSubmit)
             }
         }
 
         // Event listeners for buttons
-        document.querySelector('#addQuestionBtn').addEventListener('click', addQuestion);
-        document.querySelector('#saveFormBtn').addEventListener('click', saveForm);
-        document.querySelector('#toggleViewBtn').addEventListener('click', toggleViewMode);
-        document.querySelector('#deleteFormBtn').addEventListener('click', deleteForm);
+        document.querySelector('#addQuestionBtn').addEventListener('click', addQuestion)
+        document.querySelector('#saveFormBtn').addEventListener('click', saveForm)
+        document.querySelector('#toggleViewBtn').addEventListener('click', toggleViewMode)
+        document.querySelector('#deleteFormBtn').addEventListener('click', deleteForm)
     </script>
 </body>
 </html>

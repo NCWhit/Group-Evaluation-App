@@ -43,48 +43,49 @@
     <script>
     // Redirect to builder
     $('#btnCreateForm').on('click', () => {
-        window.location.href = 'form-builder.html';
-    });
+        window.location.href = 'form-builder.html'
+    })
 
     // Load and display user's own forms
     function loadForms() {
-        const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
-        const container = $('#formList');
-        container.empty();
+        const arrSavedForms = JSON.parse(localStorage.getItem('userForms')) || []
+        const elemContainer = $('#formList')
+        elemContainer.empty()
 
-        if (savedForms.length === 0) {
-            container.html('<p class="text-muted">No forms created yet.</p>');
-            return;
+        if (arrSavedForms.length === 0) {
+            elemContainer.html('<p class="text-muted">No forms created yet.</p>')
+            return
         }
 
-        savedForms.forEach((form, index) => {
-            const formCard = `
+        // if forms not empty, iterate through and display them by appending to the container
+        arrSavedForms.forEach((objForm, index) => {
+            const elemFormCard = `
                 <div class="mb-3 p-3 border rounded bg-light text-dark">
-                    <h5>${form.name}</h5>
+                    <h5>${objForm.name}</h5>
                     <ul class="mb-0">
-                        ${form.questions.map((q, i) => `<li><strong>Q${i + 1}:</strong> ${q.label} <span class="badge bg-secondary">${q.type}</span></li>`).join('')}
+                        ${objForm.questions.map((q, i) => `<li><strong>Q${i + 1}:</strong> ${q.label} <span class="badge bg-secondary">${q.type}</span></li>`).join('')}
                     </ul>
                     <button class="btn btn-secondary btn-sm mt-2" onclick="editForm(${index})">Edit</button>
                     <button class="btn btn-info btn-sm mt-2 ms-2" onclick="viewJoinCode(${index})">Join Code</button>
-                </div>`;
-            container.append(formCard);
-        });
+                </div>`
+            elemContainer.append(elemFormCard)
+        })
     }
 
-    // function to store the form index and redirect to the builder
+    // edit form: store the form index in localStorage and redirect to form builder
     function editForm(index) {
-        localStorage.setItem('editFormIndex', index);
-        window.location.href = 'form-builder.html';
+        localStorage.setItem('editFormIndex', index)
+        window.location.href = 'form-builder.html'
     }
     
     // function to view the join code associated with a form
     function viewJoinCode(index) {
-        const savedForms = JSON.parse(localStorage.getItem('userForms')) || [];
-        const form = savedForms[index];
-        if (form && form.code) {
+        const arrSavedForms = JSON.parse(localStorage.getItem('userForms')) || []
+        const objForm = arrSavedForms[index]
+        if (objForm && objForm.code) {
             Swal.fire({
                 title: 'Join Code',
-                text: `The join code for this form is: ${form.code}`,
+                text: `The join code for this form is: ${objForm.code}`,
                 icon: 'info'
         })
         } else {
@@ -92,7 +93,7 @@
                 title: 'No Join Code',
                 text: 'This form does not have a join code.',
                 icon: 'warning'
-            });
+            })
         }
     }
 
@@ -101,66 +102,67 @@
         Swal.fire({
             title: 'Enter Form Code',
             input: 'text',
-            inputPlaceholder: 'e.g., ABC123',
+            inputPlaceholder: 'e.x., ABC123',
             showCancelButton: true,
             confirmButtonText: 'Join',
         }).then(result => {
             if (result.isConfirmed && result.value) {
-                const joinedForms = JSON.parse(localStorage.getItem('joinedForms') || '[]');
-                joinedForms.push({ code: result.value });
-                localStorage.setItem('joinedForms', JSON.stringify(joinedForms));
-                Swal.fire("Joined!", `Form Code: ${result.value}`, "success");
-                loadJoinedForms();
+                const arrJoinedForms = JSON.parse(localStorage.getItem('joinedForms') || '[]')
+                arrJoinedForms.push({ code: result.value })
+                localStorage.setItem('joinedForms', JSON.stringify(arrJoinedForms))
+                Swal.fire("Joined!", `Form Code: ${result.value}`, "success")
+                loadJoinedForms()
             }
-        });
-    });
+        })
+    })
 
     // Load joined forms
     function loadJoinedForms() {
-        const joined = JSON.parse(localStorage.getItem('joinedForms')) || [];
-        const container = $('#joinedFormList');
-        container.empty();
+        const arrJoined = JSON.parse(localStorage.getItem('joinedForms')) || []
+        const elemContainer = $('#joinedFormList')
+        elemContainer.empty()
 
-        if (joined.length === 0) {
-            container.html('<p class="text-muted">You have not joined any forms yet.</p>');
-            return;
+        if (arrJoined.length === 0) {
+            elemContainer.html('<p class="text-muted">You have not joined any forms yet.</p>')
+            return
         }
 
-        joined.forEach((form, index) => {
-            container.append(`
+        // if joined forms not empty, iterate through and display them by appending to the container
+        arrJoined.forEach((objForm, index) => {
+            elemContainer.append(`
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-light text-dark">
-                    <div><strong>Code:</strong> ${form.code}</div>
+                    <div><strong>Code:</strong> ${objForm.code}</div>
                     <button class="btn btn-sm btn-danger" onclick="leaveJoinedForm(${index})">Leave</button>
                 </div>
-            `);
-        });
+            `)
+        })
     }
 
     // Leave any joined form
     function leaveJoinedForm(index) {
-        let joined = JSON.parse(localStorage.getItem('joinedForms')) || [];
-        const code = joined[index].code;
+        let arrJoined = JSON.parse(localStorage.getItem('joinedForms')) || []
+        const strCode = arrJoined[index].code
 
         Swal.fire({
             title: 'Leave Form?',
-            text: `Are you sure you want to leave form "${code}"?`,
+            text: `Are you sure you want to leave form "${strCode}"?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Yes, leave it!',
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                joined.splice(index, 1);
-                localStorage.setItem('joinedForms', JSON.stringify(joined));
-                loadJoinedForms();
-                Swal.fire("Left!", `You have left the form "${code}".`, "success");
+                arrJoined.splice(index, 1)
+                localStorage.setItem('joinedForms', JSON.stringify(arrJoined))
+                loadJoinedForms()
+                Swal.fire("Left!", `You have left the form "${strCode}".`, "success")
             }
-        });
+        })
     }
 
     // Initial Load
-    loadForms();
-    loadJoinedForms();
+    loadForms()
+    loadJoinedForms()
     </script>
 
 </body>

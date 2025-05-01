@@ -21,37 +21,40 @@ app.use(express.json())
 
 
 app.post('/register', (req, res, next) => {
-    let strEmail = req.body.email.trim().toLowerCase();
-    let strPassword = req.body.password;
+    let strEmail = req.body.email.trim().toLowerCase()
+    let strPassword = req.body.password
+    let strFirstName = req.body.firstname
+    let strLastName = req.body.lastname
+    let strName = strFirstName + " " + strLastName
 
     // Email validation 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(strEmail)) {
-        return res.status(400).json({ error: "You must provide a valid email address" });
+        return res.status(400).json({ error: "You must provide a valid email address" })
     }
 
     // Password validation 
     if (strPassword.length < 8) {
-        return res.status(400).json({ error: "Password must be at least 8 characters long" });
+        return res.status(400).json({ error: "Password must be at least 8 characters long" })
     }
     if (!/[A-Z]/.test(strPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one uppercase letter" });
+        return res.status(400).json({ error: "Password must contain at least one uppercase letter" })
     }
     if (!/[a-z]/.test(strPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one lowercase letter" });
+        return res.status(400).json({ error: "Password must contain at least one lowercase letter" })
     }
     if (!/[0-9]/.test(strPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one number" });
+        return res.status(400).json({ error: "Password must contain at least one number" })
     }
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(strPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one special character" });
+        return res.status(400).json({ error: "Password must contain at least one special character" })
     }
 
-    strPassword = bcrypt.hashSync(strPassword, intSalt);
+    strPassword = bcrypt.hashSync(strPassword, intSalt)
 
     // Add the new user to the DB 
-    let strCommand = `INSERT INTO tblUsers VALUES (?, ?, ?)`;
-    db.run(strCommand, [strEmail, strPassword, "Active"], function (err) {
+    let strCommand = `INSERT INTO tblUsers VALUES (?, ?, ?)`
+    db.run(strCommand, [strEmail, strPassword, strName, "Active"], function (err) {
         if(err){
             console.log(err)
             res.status(400).json({
@@ -64,11 +67,11 @@ app.post('/register', (req, res, next) => {
             })
         }
     })
-});
+})
 
 app.post('/login', (req, res, next) => {
-    const strEmail = req.body.email.trim().toLowerCase();
-    const strPassword = req.body.password;
+    const strEmail = req.body.email.trim().toLowerCase()
+    const strPassword = req.body.password
 
     if(strEmail,strPassword == null){
         return res.status(400).json({error:"Must provide an email and password"})

@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken')
 
 const strSecret = 'thisIsOurSecret'
 
-const dbSource = "" /// Will need to be added once db is built
+const dbSource = "groupEvalDB" /// Will need to be added once db is built
 const HTTP_PORT = 8000
 const db = new sqlite3.Database(dbSource)
 

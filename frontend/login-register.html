@@ -51,8 +51,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Array to hold all registered users (Being used to mimic backend database until it is added)
-        const arrRegisteredUsers = []
 
         // Registration Handler with aggregated SweetAlert errors
         document.querySelector('#btnRegister').addEventListener('click',(e) => {
@@ -102,8 +100,6 @@
                 lastName: strLastName
             }
 
-            // Pushing new user onto "database"
-            arrRegisteredUsers.push(objNewUser)
 
             Swal.fire("Success!", "You have successfully registered!", "success")
             $('#frmRegister').slideUp(function(){
@@ -135,16 +131,6 @@
                     icon: "error"
                 })
                 return
-            }
-
-            const objUserFound = arrRegisteredUsers.find(user => user.email === strEmail && user.password === strPassword)
-
-            if (objUserFound) {
-                Swal.fire("Login Successful!", `Welcome, ${objUserFound.firstName} ${objUserFound.lastName}!`, "success").then(() => {
-                    window.location.href = 'dashboard.html';
-                });
-            } else {
-                Swal.fire("Login Failed", "Invalid email or password", "error")
             }
         })
 
